@@ -1,0 +1,651 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F3EA;
+    --surface:#FFFFFF;
+    --surface-2:#FBFAF5;
+    --ink:#20281F;
+    --muted:#6B7267;
+    --line:#DFD9C6;
+    --primary:#2F6B4F;
+    --primary-dark:#1F4A37;
+    --primary-tint:#E4EEE7;
+    --gold:#E3A857;
+    --danger:#D64550;
+    --danger-tint:#FBE7E7;
+    --navy:#22334F;
+    --radius:14px;
+    --font-display:'Shippori Mincho', serif;
+    --font-body:'Zen Kaku Gothic New', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);}
+  .app{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* header */
+  .header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  .header h1{font-family:var(--font-display);font-weight:800;font-size:30px;margin:0 0 4px;letter-spacing:.02em;display:flex;align-items:center;gap:10px;}
+  .header .badge-count{font-family:var(--font-mono);font-size:12px;background:var(--navy);color:#fff;padding:2px 8px;border-radius:20px;vertical-align:middle;}
+  .header p{margin:0;color:var(--muted);font-size:13.5px;}
+  .stats{display:flex;gap:10px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px;text-align:center;min-width:92px;}
+  .stat .num{font-family:var(--font-mono);font-size:22px;font-weight:700;line-height:1;color:var(--primary-dark);}
+  .stat.warn .num{color:var(--danger);}
+  .stat .label{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  /* conflict banner */
+  .conflict-banner{background:var(--danger-tint);border:1px solid #EFC2C6;border-left:4px solid var(--danger);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13.5px;}
+  .conflict-banner strong{color:var(--danger);}
+  .conflict-banner ul{margin:6px 0 0;padding-left:20px;}
+  .conflict-banner li{margin-bottom:3px;}
+
+  /* sync / setup status */
+  .setup-banner{background:#FDF3E3;border:1px solid #F0DBB0;border-left:4px solid var(--gold);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#7A5A1E;line-height:1.6;}
+  .setup-banner code{background:#fff;padding:1px 6px;border-radius:4px;font-family:var(--font-mono);font-size:11.5px;}
+  .conn-error-banner{background:var(--danger-tint);border:1px solid #EFC2C6;border-left:4px solid var(--danger);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--danger);}
+  .syncing-note{font-size:11px;color:var(--muted);text-align:right;margin:-8px 0 12px;}
+
+  /* card */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:18px;}
+  .card > h2{font-family:var(--font-display);font-size:17px;font-weight:700;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .card > h2 .n{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-weight:400;}
+
+  /* form */
+  form.add-event{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+  form.add-event .f-club{grid-column:span 2;}
+  form.add-event .f-date{grid-column:span 2;}
+  form.add-event .f-start{grid-column:span 1;}
+  form.add-event .f-end{grid-column:span 1;}
+  form.add-event .f-loc{grid-column:span 3;}
+  form.add-event .f-note{grid-column:span 2;}
+  form.add-event .f-submit{grid-column:span 1;display:flex;align-items:flex-end;}
+  form.add-event .f-club-other{grid-column:1/-1;display:none;}
+  form.add-event .f-club-other.show{display:block;}
+  label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+  input,select{width:100%;font-family:var(--font-body);font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);}
+  input:focus,select:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary);}
+  input[type=time],input[type=date]{font-family:var(--font-mono);}
+  button{cursor:pointer;font-family:var(--font-body);}
+  .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:700;width:100%;transition:background .15s;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12.5px;color:var(--muted);}
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary-dark);}
+
+  /* filter chips */
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .chip{border:1px solid var(--line);background:var(--surface-2);border-radius:20px;padding:5px 13px;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;}
+  .chip .dot{width:8px;height:8px;border-radius:50%;}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .chip.active .dot{outline:2px solid #fff;}
+
+  /* day tabs */
+  .day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .day-tab{font-family:var(--font-mono);font-size:12.5px;padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;position:relative;}
+  .day-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .day-tab .warn-dot{position:absolute;top:-4px;right:-4px;width:9px;height:9px;background:var(--danger);border-radius:50%;border:1.5px solid var(--bg);}
+
+  /* timeline */
+  .timeline-wrap{overflow-x:auto;}
+  .timeline{min-width:760px;}
+  .tl-axis{display:grid;margin-left:110px;position:relative;height:20px;margin-bottom:4px;}
+  .tl-axis span{position:absolute;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);transform:translateX(-50%);}
+  .tl-row{display:flex;align-items:stretch;border-top:1px solid var(--line);}
+  .tl-row:last-child{border-bottom:1px solid var(--line);}
+  .tl-label{width:110px;flex:none;font-size:12px;font-weight:700;color:var(--navy);padding:10px 8px;display:flex;align-items:center;}
+  .tl-track{position:relative;flex:1;min-height:52px;background:
+      repeating-linear-gradient(to right, transparent 0, transparent calc(var(--hourpx) - 1px), var(--line) calc(var(--hourpx) - 1px), var(--line) var(--hourpx));
+  }
+  .tl-block{position:absolute;top:6px;bottom:6px;border-radius:8px;padding:5px 8px;color:#fff;font-size:11.5px;line-height:1.3;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.15);cursor:pointer;}
+  .tl-block b{display:block;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tl-block span.time{font-family:var(--font-mono);opacity:.9;font-size:10.5px;}
+  .tl-block.conflict{outline:2px solid var(--danger);outline-offset:1px;animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(214,69,80,.45);}50%{box-shadow:0 0 0 5px rgba(214,69,80,0);}}
+  .tl-block .warn-flag{position:absolute;top:2px;right:4px;font-size:11px;}
+
+  /* list */
+  .list-day-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin:24px 0 10px;}
+  .ev-list{display:flex;flex-direction:column;gap:8px;}
+  .ev-card{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface-2);}
+  .ev-card.conflict{border-color:var(--danger);background:var(--danger-tint);}
+  .ev-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .ev-time{font-family:var(--font-mono);font-size:12.5px;color:var(--navy);width:100px;flex:none;}
+  .ev-main{flex:1;min-width:0;}
+  .ev-main .club{font-size:11px;color:var(--muted);font-weight:700;}
+  .ev-main .comp{font-size:14px;font-weight:700;}
+  .ev-main .loc{font-size:12px;color:var(--muted);}
+  .ev-main .note{font-size:11.5px;color:var(--muted);font-style:italic;}
+  .ev-del{flex:none;background:none;border:none;color:var(--muted);font-size:16px;padding:4px 8px;border-radius:6px;}
+  .ev-del:hover{color:var(--danger);background:#fff;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty .big{font-size:40px;margin-bottom:8px;}
+  .foot-note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;}
+
+  /* detail modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(32,40,31,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:var(--surface);border-radius:16px;padding:24px 24px 20px;max-width:380px;width:100%;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+  .modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:16px;color:var(--muted);padding:4px 8px;border-radius:6px;}
+  .modal-close:hover{background:var(--surface-2);color:var(--ink);}
+  .modal-dot{width:12px;height:12px;border-radius:50%;margin-bottom:8px;}
+  .modal-club{font-family:var(--font-display);font-weight:700;font-size:19px;margin-bottom:12px;padding-right:24px;}
+  .modal-row{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px;}
+  .modal-icon{font-size:14px;flex:none;}
+  .modal-note-box{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;}
+  .modal-note-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:3px;}
+  .modal-note-text{font-size:13.5px;line-height:1.5;white-space:pre-wrap;}
+  .modal-conflict{margin-top:12px;background:var(--danger-tint);border-left:3px solid var(--danger);border-radius:6px;padding:8px 10px;font-size:12.5px;color:var(--danger);}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions .btn-primary{flex:1;}
+  .modal-del{color:var(--danger);border-color:#EFC2C6;}
+  .modal-del:hover{background:var(--danger-tint);border-color:var(--danger);}
+
+  /* edit mode */
+  .edit-banner{display:flex;justify-content:space-between;align-items:center;background:var(--primary-tint);border:1px solid #C9DFD1;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:13px;color:var(--primary-dark);}
+  .edit-banner button{background:none;border:1px solid var(--primary-dark);color:var(--primary-dark);border-radius:6px;padding:3px 10px;font-size:12px;}
+  .edit-banner button:hover{background:var(--primary-dark);color:#fff;}
+  .ev-card{cursor:pointer;}
+  .ev-card:hover{border-color:var(--primary);}
+  .tl-block{cursor:pointer;}
+
+  @media (max-width:720px){
+    form.add-event{grid-template-columns:repeat(2,1fr);}
+    form.add-event .f-club,form.add-event .f-date,form.add-event .f-loc,form.add-event .f-note,form.add-event .f-club-other{grid-column:span 2;}
+    form.add-event .f-start,form.add-event .f-end,form.add-event .f-submit{grid-column:span 1;}
+    .stats{width:100%;}
+    .stat{flex:1;}
+  }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>🏆 大会スケジュール管理<span class="badge-count" id="countBadge">0件</span></h1>
+      <p>部活動の大会・試合を日付ごとに整理し、時間や場所の重複を自動でチェックします</p>
+    </div>
+    <div class="stats">
+      <button type="button" class="btn-ghost" id="refreshBtn" title="Googleスプレッドシートから最新の登録内容を取得します">🔄 更新</button>
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="label">登録件数</div></div>
+      <div class="stat"><div class="num" id="statDays">0</div><div class="label">開催日数</div></div>
+      <div class="stat warn"><div class="num" id="statConflict">0</div><div class="label">重複あり</div></div>
+    </div>
+  </div>
+
+  <div id="syncBanner"></div>
+  <div id="conflictBanner"></div>
+
+  <div class="card">
+    <h2 id="formTitle">＋ 大会・試合を登録</h2>
+    <div id="editBanner"></div>
+    <form class="add-event" id="addForm">
+      <div class="f-club"><label>部活動名</label><select id="in-club" required><option value="" disabled selected>選択してください</option></select></div>
+      <div class="f-club-other" id="clubOtherWrap"><label>大会名・生徒名など（自由入力）</label><input id="in-club-other" placeholder="例）個人参加：山田花子（〇〇市長杯 卓球の部）"></div>
+      <div class="f-date"><label>日付</label><select id="in-date" required><option value="" disabled selected>選択してください</option></select></div>
+      <div class="f-start"><label>開始</label><input id="in-start" type="time" required></div>
+      <div class="f-end"><label>終了</label><input id="in-end" type="time" required></div>
+      <div class="f-loc"><label>場所</label><input id="in-loc" list="locList" placeholder="例）市民体育館" required></div>
+      <div class="f-note"><label>備考（任意）</label><input id="in-note" placeholder="集合時間・引率者など"></div>
+      <div class="f-submit"><button type="submit" class="btn-primary" id="submitBtn">追加する</button></div>
+    </form>
+    <datalist id="locList"></datalist>
+  </div>
+
+  <div class="card" id="filterCard" style="display:none;">
+    <h2>部活動でしぼり込む <span class="n" id="filterHint"></span></h2>
+    <div class="chip-row" id="clubChips"></div>
+  </div>
+
+  <div id="mainArea"></div>
+
+  <div class="foot-note">登録内容はGoogleスプレッドシートに保存され、このリンクを開いた全員で共有されます</div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <button type="button" class="modal-close" id="modalCloseBtn">✕</button>
+    <div class="modal-dot" id="modalDot"></div>
+    <div class="modal-club" id="modalClub"></div>
+    <div class="modal-row"><span class="modal-icon">🗓</span><span id="modalDate"></span></div>
+    <div class="modal-row"><span class="modal-icon">⏰</span><span id="modalTime"></span></div>
+    <div class="modal-row"><span class="modal-icon">📍</span><span id="modalLoc"></span></div>
+    <div class="modal-note-box" id="modalNoteBox" style="display:none;">
+      <div class="modal-note-label">備考</div>
+      <div class="modal-note-text" id="modalNote"></div>
+    </div>
+    <div class="modal-conflict" id="modalConflict" style="display:none;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" id="modalEditBtn">✎ 編集する</button>
+      <button type="button" class="btn-ghost modal-del" id="modalDeleteBtn">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ▼▼▼ 設定：Googleスプレッドシートと連携するには、下のURLを自分の
+  // Apps Script ウェブアプリのURLに書き換えてください（設定方法は別途お渡しした手順を参照）
+  const SHEET_API_URL = 'https://script.google.com/a/macros/e-net.nara.jp/s/AKfycbz_58S9m5OvwhhVGXKVBzPLVfoEW36gpT9QZiDMfYkN9Hg5NQ_wVQ3vU68Ff4VdwcAA/exec';
+  // ▲▲▲
+  const SHEET_CONFIGURED = /^https:\/\//.test(SHEET_API_URL);
+  const AUTO_REFRESH_MS = 20000;
+
+  let events = [];
+  let activeClubFilter = null; // null = all
+  let activeDay = null; // date string
+  let editingId = null; // id of event currently being edited, or null
+  let lastConflictIds = new Set();
+
+  const CLUB_OPTIONS = ['野球','サッカー','男子バスケ','女子バスケ','女子バレー','卓球','陸上','ソフトテニス男子','ソフトテニス女子'];
+  const OTHER_VALUE = '__other__';
+  const DATE_SPAN_DAYS = 365; // 本日から何日先まで選べるようにするか
+
+  const PALETTE = ['#2F6B4F','#22334F','#8A6FB0','#C97B4A','#3B7A9E','#B0555B','#6B8E4E','#9C6B30','#4E7A8E','#7A5C99'];
+  function colorFor(name){
+    let h=0; for(let i=0;i<name.length;i++){ h = (h*31 + name.charCodeAt(i)) >>> 0; }
+    return PALETTE[h % PALETTE.length];
+  }
+  function uid(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function toMin(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
+  function fmtTime(t){ return t; }
+  function fmtDate(d){
+    const dt = new Date(d+'T00:00:00');
+    const wd = ['日','月','火','水','木','金','土'][dt.getDay()];
+    return `${dt.getMonth()+1}/${dt.getDate()}(${wd})`;
+  }
+  function overlaps(a,b){ return toMin(a.start) < toMin(b.end) && toMin(b.start) < toMin(a.end); }
+
+  function buildStaticOptions(){
+    const clubSel = document.getElementById('in-club');
+    CLUB_OPTIONS.forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      clubSel.appendChild(opt);
+    });
+    const otherOpt = document.createElement('option');
+    otherOpt.value = OTHER_VALUE;
+    otherOpt.textContent = 'その他（部活動に所属していない・個人参加など）';
+    clubSel.appendChild(otherOpt);
+    clubSel.addEventListener('change', ()=> toggleClubOther(clubSel.value === OTHER_VALUE));
+
+    const dateSel = document.getElementById('in-date');
+    const start = new Date(); start.setHours(0,0,0,0);
+    let currentGroup = null, currentGroupKey = '';
+    for(let i=0; i<=DATE_SPAN_DAYS; i++){
+      const d = new Date(start); d.setDate(d.getDate()+i);
+      const groupKey = `${d.getFullYear()}-${d.getMonth()}`;
+      if(groupKey !== currentGroupKey){
+        currentGroupKey = groupKey;
+        currentGroup = document.createElement('optgroup');
+        currentGroup.label = `${d.getFullYear()}年${d.getMonth()+1}月`;
+        dateSel.appendChild(currentGroup);
+      }
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const opt = document.createElement('option');
+      opt.value = iso;
+      opt.textContent = fmtDate(iso);
+      currentGroup.appendChild(opt);
+    }
+  }
+
+  function toggleClubOther(show){
+    const wrap = document.getElementById('clubOtherWrap');
+    const input = document.getElementById('in-club-other');
+    wrap.classList.toggle('show', show);
+    if(show){ input.setAttribute('required','required'); }
+    else { input.removeAttribute('required'); input.value=''; }
+  }
+
+  function setSyncBanner(html){ document.getElementById('syncBanner').innerHTML = html; }
+
+  function showSetupBanner(){
+    setSyncBanner(`<div class="setup-banner">⚙️ <strong>まだGoogleスプレッドシートと連携されていません。</strong><br>
+      このままでも動作は確認できますが、入力内容は画面を閉じると消えてしまいます（自分の端末にも保存されません）。<br>
+      複数の先生で共有するには、Google Apps Scriptのウェブアプリを発行し、コード内の <code>SHEET_API_URL</code> にそのURLを設定してください。</div>`);
+  }
+  function showConnErrorBanner(){
+    setSyncBanner(`<div class="conn-error-banner">⚠ Googleスプレッドシートとの通信に失敗しました。ネットワーク状況を確認するか、「🔄 更新」で再度お試しください。</div>`);
+  }
+  function clearSyncBanner(){ setSyncBanner(''); }
+
+  // JSONP経由でGoogle Apps Scriptと通信する（ブラウザのCORS制限を回避するため）
+  function jsonp(url, params){
+    return new Promise((resolve, reject)=>{
+      const cbName = 'jsonp_cb_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      let timeoutId;
+      function cleanup(){
+        clearTimeout(timeoutId);
+        delete window[cbName];
+        script.remove();
+      }
+      window[cbName] = (data)=>{ resolve(data); cleanup(); };
+      const qs = new URLSearchParams(Object.assign({}, params, {callback: cbName})).toString();
+      script.src = url + (url.includes('?') ? '&' : '?') + qs;
+      script.onerror = ()=>{ reject(new Error('JSONP load error')); cleanup(); };
+      timeoutId = setTimeout(()=>{ reject(new Error('JSONP timeout')); cleanup(); }, 15000);
+      document.body.appendChild(script);
+    });
+  }
+
+  async function loadEvents(){
+    if(!SHEET_CONFIGURED){
+      events = [];
+      showSetupBanner();
+      render();
+      return;
+    }
+    try{
+      events = await jsonp(SHEET_API_URL, {action:'list'});
+      clearSyncBanner();
+    }catch(err){
+      console.error('読み込みに失敗しました', err);
+      showConnErrorBanner();
+    }
+    render();
+  }
+
+  async function callApi(action, payload){
+    if(!SHEET_CONFIGURED) return {success:false};
+    try{
+      const params = {action};
+      if(payload && payload.event) params.event = JSON.stringify(payload.event);
+      if(payload && payload.id) params.id = payload.id;
+      const data = await jsonp(SHEET_API_URL, params);
+      clearSyncBanner();
+      return data;
+    }catch(err){
+      console.error('通信に失敗しました', err);
+      showConnErrorBanner();
+      return {success:false};
+    }
+  }
+
+  // --- conflict detection ---
+  function computeConflicts(){
+    // returns Set of event ids that are in conflict, plus list of human messages
+    const conflictIds = new Set();
+    const messages = [];
+    const byDate = {};
+    events.forEach(ev => { (byDate[ev.date] ||= []).push(ev); });
+    Object.keys(byDate).forEach(date=>{
+      const list = byDate[date];
+      for(let i=0;i<list.length;i++){
+        for(let j=i+1;j<list.length;j++){
+          const a=list[i], b=list[j];
+          if(!overlaps(a,b)) continue;
+          const sameLoc = a.location.trim() === b.location.trim();
+          const sameClub = a.club.trim() === b.club.trim();
+          if(sameLoc){
+            conflictIds.add(a.id); conflictIds.add(b.id);
+            messages.push(`${fmtDate(date)} ${a.start}〜 「${a.location}」で ${a.club} と ${b.club} の時間が重なっています`);
+          } else if(sameClub){
+            conflictIds.add(a.id); conflictIds.add(b.id);
+            messages.push(`${fmtDate(date)} ${a.club} が同時刻に2つの場所（${a.location} / ${b.location}）の大会に重複しています`);
+          }
+        }
+      }
+    });
+    return {conflictIds, messages};
+  }
+
+  function render(){
+    events.sort((a,b)=> a.date===b.date ? toMin(a.start)-toMin(b.start) : a.date.localeCompare(b.date));
+    const {conflictIds, messages} = computeConflicts();
+    lastConflictIds = conflictIds;
+
+    // header stats
+    const dates = [...new Set(events.map(e=>e.date))];
+    document.getElementById('countBadge').textContent = events.length + '件';
+    document.getElementById('statTotal').textContent = events.length;
+    document.getElementById('statDays').textContent = dates.length;
+    document.getElementById('statConflict').textContent = messages.length;
+
+    // conflict banner
+    const banner = document.getElementById('conflictBanner');
+    if(messages.length){
+      banner.innerHTML = `<div class="conflict-banner"><strong>⚠ 重複が${messages.length}件あります</strong><ul>${messages.map(m=>`<li>${escapeHtml(m)}</li>`).join('')}</ul></div>`;
+    } else { banner.innerHTML = ''; }
+
+    // location datalist + filter chip list (fixed clubs first, then any custom names in use)
+    const clubsPresent = [...new Set(events.map(e=>e.club))];
+    const clubs = [...CLUB_OPTIONS.filter(c=>clubsPresent.includes(c)), ...clubsPresent.filter(c=>!CLUB_OPTIONS.includes(c))];
+    const locs = [...new Set(events.map(e=>e.location))];
+    document.getElementById('locList').innerHTML = locs.map(l=>`<option value="${escapeHtml(l)}">`).join('');
+
+    // club filter chips
+    const filterCard = document.getElementById('filterCard');
+    if(clubs.length){
+      filterCard.style.display='';
+      document.getElementById('filterHint').textContent = activeClubFilter ? `「${activeClubFilter}」のみ表示中` : '全部活表示中';
+      const chips = document.getElementById('clubChips');
+      chips.innerHTML = `<div class="chip ${!activeClubFilter?'active':''}" data-club="">すべて</div>` +
+        clubs.map(c=>`<div class="chip ${activeClubFilter===c?'active':''}" data-club="${escapeHtml(c)}"><span class="dot" style="background:${colorFor(c)}"></span>${escapeHtml(c)}</div>`).join('');
+      chips.querySelectorAll('.chip').forEach(el=>{
+        el.onclick = ()=>{ activeClubFilter = el.dataset.club || null; render(); };
+      });
+    } else { filterCard.style.display='none'; }
+
+    const filtered = activeClubFilter ? events.filter(e=>e.club===activeClubFilter) : events;
+    const mainArea = document.getElementById('mainArea');
+
+    if(!filtered.length){
+      mainArea.innerHTML = `<div class="card empty"><div class="big">📋</div>まだ大会が登録されていません。上のフォームから追加してください。</div>`;
+      return;
+    }
+
+    const filteredDates = [...new Set(filtered.map(e=>e.date))].sort();
+    if(!activeDay || !filteredDates.includes(activeDay)) activeDay = filteredDates[0];
+
+    let html = '<div class="card"><h2>📅 開催日</h2><div class="day-tabs">';
+    filteredDates.forEach(d=>{
+      const dayHasConflict = filtered.some(e=>e.date===d && conflictIds.has(e.id));
+      html += `<div class="day-tab ${d===activeDay?'active':''}" data-day="${d}">${fmtDate(d)}${dayHasConflict?'<span class="warn-dot"></span>':''}</div>`;
+    });
+    html += '</div>';
+
+    // timeline for active day
+    const dayEvents = filtered.filter(e=>e.date===activeDay).sort((a,b)=>toMin(a.start)-toMin(b.start));
+    const minStart = Math.min(...dayEvents.map(e=>toMin(e.start)));
+    const maxEnd = Math.max(...dayEvents.map(e=>toMin(e.end)));
+    const gridStart = Math.floor(minStart/60)*60 - 30 < 0 ? 0 : Math.floor(minStart/60)*60;
+    const gridEnd = Math.ceil(maxEnd/60)*60 + 30;
+    const totalMin = gridEnd - gridStart;
+    const hourPx = 90;
+    const pxPerMin = hourPx/60;
+    const locations = [...new Set(dayEvents.map(e=>e.location))];
+
+    html += `<div class="timeline-wrap"><div class="timeline" style="--hourpx:${hourPx}px">`;
+    html += `<div class="tl-axis" style="width:${totalMin*pxPerMin}px">`;
+    for(let m=gridStart; m<=gridEnd; m+=60){
+      const left = (m-gridStart)*pxPerMin;
+      const hh = Math.floor(m/60);
+      html += `<span style="left:${left}px">${hh}:00</span>`;
+    }
+    html += '</div>';
+    locations.forEach(loc=>{
+      html += `<div class="tl-row"><div class="tl-label">${escapeHtml(loc)}</div><div class="tl-track" style="width:${totalMin*pxPerMin}px">`;
+      dayEvents.filter(e=>e.location===loc).forEach(ev=>{
+        const left = (toMin(ev.start)-gridStart)*pxPerMin;
+        const width = Math.max((toMin(ev.end)-toMin(ev.start))*pxPerMin, 60);
+        const isConf = conflictIds.has(ev.id);
+        html += `<div class="tl-block ${isConf?'conflict':''}" style="left:${left}px;width:${width}px;background:${colorFor(ev.club)}" data-id="${ev.id}" title="クリックして詳細を見る">
+          ${isConf?'<span class="warn-flag">⚠</span>':''}
+          <b>${escapeHtml(ev.club)}</b>
+          <span class="time">${ev.start}–${ev.end}</span>
+        </div>`;
+      });
+      html += '</div></div>';
+    });
+    html += '</div></div></div>';
+
+    // list view for the day
+    html += `<div class="list-day-title">${fmtDate(activeDay)} の一覧</div><div class="ev-list">`;
+    dayEvents.forEach(ev=>{
+      const isConf = conflictIds.has(ev.id);
+      html += `<div class="ev-card ${isConf?'conflict':''}" data-id="${ev.id}" title="クリックして詳細を見る">
+        <div class="ev-dot" style="background:${colorFor(ev.club)}"></div>
+        <div class="ev-time">${ev.start}–${ev.end}</div>
+        <div class="ev-main">
+          <div class="comp">${escapeHtml(ev.club)}${isConf?' ・ ⚠ 重複':''}</div>
+          <div class="loc">📍 ${escapeHtml(ev.location)}</div>
+          ${ev.note ? `<div class="note">${escapeHtml(ev.note)}</div>` : ''}
+        </div>
+        <button class="ev-del" data-id="${ev.id}" title="削除">✕</button>
+      </div>`;
+    });
+    html += '</div>';
+
+    mainArea.innerHTML = html;
+
+    mainArea.querySelectorAll('.day-tab').forEach(el=>{
+      el.onclick = ()=>{ activeDay = el.dataset.day; render(); };
+    });
+    mainArea.querySelectorAll('.ev-del').forEach(el=>{
+      el.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = el.dataset.id;
+        if(!id) return;
+        if(confirm('この大会の登録を削除しますか？')){
+          if(editingId===id) exitEditMode();
+          await callApi('delete', {id});
+          await loadEvents();
+        }
+      });
+    });
+    mainArea.querySelectorAll('.ev-card, .tl-block').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const id = el.dataset.id;
+        const ev = events.find(e=>e.id===id);
+        if(ev) showDetailModal(ev);
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  let detailModalEventId = null;
+
+  function showDetailModal(ev){
+    detailModalEventId = ev.id;
+    document.getElementById('modalDot').style.background = colorFor(ev.club);
+    document.getElementById('modalClub').textContent = ev.club;
+    document.getElementById('modalDate').textContent = fmtDate(ev.date);
+    document.getElementById('modalTime').textContent = `${ev.start} 〜 ${ev.end}`;
+    document.getElementById('modalLoc').textContent = ev.location;
+
+    const noteBox = document.getElementById('modalNoteBox');
+    if(ev.note){
+      noteBox.style.display = '';
+      document.getElementById('modalNote').textContent = ev.note;
+    } else {
+      noteBox.style.display = 'none';
+    }
+
+    const confBox = document.getElementById('modalConflict');
+    if(lastConflictIds.has(ev.id)){
+      confBox.style.display = '';
+      confBox.textContent = '⚠ 他の登録と時間・場所（または部活動）が重なっています';
+    } else {
+      confBox.style.display = 'none';
+    }
+
+    document.getElementById('detailModal').classList.add('show');
+  }
+
+  function hideDetailModal(){
+    detailModalEventId = null;
+    document.getElementById('detailModal').classList.remove('show');
+  }
+
+  function enterEditMode(ev){
+    editingId = ev.id;
+    const clubSel = document.getElementById('in-club');
+    if(CLUB_OPTIONS.includes(ev.club)){
+      clubSel.value = ev.club;
+      toggleClubOther(false);
+    } else {
+      clubSel.value = OTHER_VALUE;
+      toggleClubOther(true);
+      document.getElementById('in-club-other').value = ev.club;
+    }
+    document.getElementById('in-date').value = ev.date;
+    document.getElementById('in-start').value = ev.start;
+    document.getElementById('in-end').value = ev.end;
+    document.getElementById('in-loc').value = ev.location;
+    document.getElementById('in-note').value = ev.note || '';
+    document.getElementById('formTitle').textContent = '✎ 大会・試合を編集';
+    document.getElementById('submitBtn').textContent = '更新する';
+    document.getElementById('editBanner').innerHTML =
+      `<div class="edit-banner"><span>「${escapeHtml(ev.club)}」の登録内容を編集中です</span><button type="button" id="cancelEditBtn">キャンセル</button></div>`;
+    document.getElementById('cancelEditBtn').onclick = exitEditMode;
+    document.getElementById('addForm').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function exitEditMode(){
+    editingId = null;
+    document.getElementById('addForm').reset();
+    toggleClubOther(false);
+    document.getElementById('formTitle').textContent = '＋ 大会・試合を登録';
+    document.getElementById('submitBtn').textContent = '追加する';
+    document.getElementById('editBanner').innerHTML = '';
+  }
+
+  document.getElementById('addForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const clubSelVal = document.getElementById('in-club').value;
+    const club = clubSelVal === OTHER_VALUE ? document.getElementById('in-club-other').value.trim() : clubSelVal;
+    const date = document.getElementById('in-date').value;
+    const start = document.getElementById('in-start').value;
+    const end = document.getElementById('in-end').value;
+    const location = document.getElementById('in-loc').value.trim();
+    const note = document.getElementById('in-note').value.trim();
+    if(!club||!date||!start||!end||!location) return;
+    if(toMin(end) <= toMin(start)){ alert('終了時刻は開始時刻より後にしてください'); return; }
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    if(editingId){
+      await callApi('update', {event:{id:editingId, club, date, start, end, location, note}});
+      exitEditMode();
+    } else {
+      await callApi('add', {event:{id:uid(), club, date, start, end, location, note}});
+      e.target.reset();
+      toggleClubOther(false);
+    }
+    submitBtn.disabled = false;
+    activeDay = date;
+    await loadEvents();
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', ()=> loadEvents());
+
+  document.getElementById('modalCloseBtn').addEventListener('click', hideDetailModal);
+  document.getElementById('detailModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'detailModal') hideDetailModal(); // クリックが背景部分の場合のみ閉じる
+  });
+  document.getElementById('modalEditBtn').addEventListener('click', ()=>{
+    const ev = events.find(e=>e.id===detailModalEventId);
+    hideDetailModal();
+    if(ev) enterEditMode(ev);
+  });
+  document.getElementById('modalDeleteBtn').addEventListener('click', async ()=>{
+    const id = detailModalEventId;
+    if(!id) return;
+    if(confirm('この大会の登録を削除しますか？')){
+      hideDetailModal();
+      if(editingId===id) exitEditMode();
+      await callApi('delete', {id});
+      await loadEvents();
+    }
+  });
+
+  buildStaticOptions();
+  loadEvents();
+  if(SHEET_CONFIGURED){
+    setInterval(()=>{ if(!editingId) loadEvents(); }, AUTO_REFRESH_MS);
+  }
+})();
+</script>
